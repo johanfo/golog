@@ -58,7 +58,7 @@ func Reset() {
 	clog = &MultiplePrint{}
 }
 
-// AppendFileWriter writes the log to a file, with the given flags
+// AppendFileWriter writes the log to the spesified filename
 func AppendFileWriter(filename string) error {
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND, 600)
 	if err != nil {
@@ -69,6 +69,14 @@ func AppendFileWriter(filename string) error {
 	wlog.Append(golog.New(f, "W:", golog.LstdFlags|golog.Lshortfile))
 	clog.Append(golog.New(f, "C:", golog.LstdFlags|golog.Lshortfile))
 	return nil
+}
+
+// AppendFileDescriptor writes the log to a specific file descriptor
+func AppendFileDescriptor(f *os.File) {
+	ilog.Append(golog.New(f, "I:", golog.LstdFlags|golog.Lshortfile))
+	dlog.Append(golog.New(f, "D:", golog.LstdFlags|golog.Lshortfile))
+	wlog.Append(golog.New(f, "W:", golog.LstdFlags|golog.Lshortfile))
+	clog.Append(golog.New(f, "C:", golog.LstdFlags|golog.Lshortfile))
 }
 
 // MultiplePrint is an Outputer that supports stacking of multiple outputs

@@ -182,7 +182,7 @@ func Printf(format string, x ...interface{}) {
 
 // PrintfLevel makes it possible to print while refering to
 // code up level above the actual code.
-func PrintfLevel(format string, up int, x ...interface{}) {
+func PrintfLevel(up int, format string, x ...interface{}) {
 	exclusiv.Lock()
 	ilog.Output(2+up, fmt.Sprintf(format, x...))
 	exclusiv.Unlock()

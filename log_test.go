@@ -8,5 +8,4 @@ func TestLogger(t *testing.T) {
 	Verbose = true
 	Debug("Should be visible")
 	Warning("A warning")
-	Fatal("must exit")
 }

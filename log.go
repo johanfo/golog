@@ -158,6 +158,14 @@ func Fatal(x ...interface{}) {
 	os.Exit(1)
 }
 
+// Fatalf logging, with exit
+func Fatalf(format string, x ...interface{}) {
+	exclusiv.Lock()
+	clog.Output(2, fmt.Sprintf(format, x...))
+	exclusiv.Unlock()
+	os.Exit(1)
+}
+
 // Println supports original "log" package style
 func Println(x ...interface{}) {
 	exclusiv.Lock()
@@ -169,5 +177,13 @@ func Println(x ...interface{}) {
 func Printf(format string, x ...interface{}) {
 	exclusiv.Lock()
 	ilog.Output(2, fmt.Sprintf(format, x...))
+	exclusiv.Unlock()
+}
+
+// PrintfLevel makes it possible to print while refering to
+// code up level above the actual code.
+func PrintfLevel(format string, up int, x ...interface{}) {
+	exclusiv.Lock()
+	ilog.Output(2+up, fmt.Sprintf(format, x...))
 	exclusiv.Unlock()
 }

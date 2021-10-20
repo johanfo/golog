@@ -16,10 +16,10 @@ var (
 	// Verbose triggers printing og debug info
 	Verbose     = false
 	createflags = golog.LstdFlags | golog.Lshortfile
-	ilog        = CreateMultiplePrint(golog.New(os.Stdout, "I:", createflags))
-	dlog        = CreateMultiplePrint(golog.New(os.Stdout, "D:", createflags))
-	wlog        = CreateMultiplePrint(golog.New(os.Stdout, "W:", createflags))
-	clog        = CreateMultiplePrint(golog.New(os.Stdout, "C:", createflags))
+	Ilog        = CreateMultiplePrint(golog.New(os.Stdout, "I:", createflags))
+	Dlog        = CreateMultiplePrint(golog.New(os.Stdout, "D:", createflags))
+	Wlog        = CreateMultiplePrint(golog.New(os.Stdout, "W:", createflags))
+	Flog        = CreateMultiplePrint(golog.New(os.Stdout, "C:", createflags))
 )
 
 // Bits or'ed together to control what's printed.
@@ -44,39 +44,39 @@ const (
 // SetFlags Recreate the outputs with new flags
 func SetFlags(flags int) {
 	createflags = flags
-	ilog = CreateMultiplePrint(golog.New(os.Stdout, "I:", flags))
-	dlog = CreateMultiplePrint(golog.New(os.Stdout, "D:", flags))
-	wlog = CreateMultiplePrint(golog.New(os.Stdout, "W:", flags))
-	clog = CreateMultiplePrint(golog.New(os.Stdout, "C:", flags))
+	Ilog = CreateMultiplePrint(golog.New(os.Stdout, "I:", flags))
+	Dlog = CreateMultiplePrint(golog.New(os.Stdout, "D:", flags))
+	Wlog = CreateMultiplePrint(golog.New(os.Stdout, "W:", flags))
+	Flog = CreateMultiplePrint(golog.New(os.Stdout, "C:", flags))
 }
 
 // Reset sets all print output streams to zerovalue. Effectivly preventing any output
 func Reset() {
-	ilog = &MultiplePrint{}
-	dlog = &MultiplePrint{}
-	wlog = &MultiplePrint{}
-	clog = &MultiplePrint{}
+	Ilog = &MultiplePrint{}
+	Dlog = &MultiplePrint{}
+	Wlog = &MultiplePrint{}
+	Flog = &MultiplePrint{}
 }
 
 // AppendFileWriter writes the log to the spesified filename
 func AppendFileWriter(filename string) error {
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND, 600)
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		return err
 	}
-	ilog.Append(golog.New(f, "I:", golog.LstdFlags|golog.Lshortfile))
-	dlog.Append(golog.New(f, "D:", golog.LstdFlags|golog.Lshortfile))
-	wlog.Append(golog.New(f, "W:", golog.LstdFlags|golog.Lshortfile))
-	clog.Append(golog.New(f, "C:", golog.LstdFlags|golog.Lshortfile))
+	Ilog.Append(golog.New(f, "I:", golog.LstdFlags|golog.Lshortfile))
+	Dlog.Append(golog.New(f, "D:", golog.LstdFlags|golog.Lshortfile))
+	Wlog.Append(golog.New(f, "W:", golog.LstdFlags|golog.Lshortfile))
+	Flog.Append(golog.New(f, "C:", golog.LstdFlags|golog.Lshortfile))
 	return nil
 }
 
 // AppendFileDescriptor writes the log to a specific file descriptor
 func AppendFileDescriptor(f *os.File) {
-	ilog.Append(golog.New(f, "I:", golog.LstdFlags|golog.Lshortfile))
-	dlog.Append(golog.New(f, "D:", golog.LstdFlags|golog.Lshortfile))
-	wlog.Append(golog.New(f, "W:", golog.LstdFlags|golog.Lshortfile))
-	clog.Append(golog.New(f, "C:", golog.LstdFlags|golog.Lshortfile))
+	Ilog.Append(golog.New(f, "I:", golog.LstdFlags|golog.Lshortfile))
+	Dlog.Append(golog.New(f, "D:", golog.LstdFlags|golog.Lshortfile))
+	Wlog.Append(golog.New(f, "W:", golog.LstdFlags|golog.Lshortfile))
+	Flog.Append(golog.New(f, "C:", golog.LstdFlags|golog.Lshortfile))
 }
 
 // MultiplePrint is an Outputer that supports stacking of multiple outputs
@@ -91,9 +91,11 @@ func CreateMultiplePrint(o Outputer) *MultiplePrint {
 
 // Output outputs to all outs
 func (d *MultiplePrint) Output(i int, s string) error {
+	exclusiv.Lock()
 	for _, v := range d.outs {
 		v.Output(i+1, s)
 	}
+	exclusiv.Unlock()
 	return nil
 }
 
@@ -106,84 +108,62 @@ var exclusiv sync.Mutex
 
 // Info logging
 func Info(x ...interface{}) {
-	exclusiv.Lock()
-	ilog.Output(2, fmt.Sprint(x...))
-	exclusiv.Unlock()
+	Ilog.Output(2, fmt.Sprint(x...))
 }
 
 // Infof logging
 func Infof(format string, x ...interface{}) {
-	exclusiv.Lock()
-	ilog.Output(2, fmt.Sprintf(format, x...))
-	exclusiv.Unlock()
+	Ilog.Output(2, fmt.Sprintf(format, x...))
 }
 
 // Debug logging
 func Debug(x ...interface{}) {
-	exclusiv.Lock()
 	if Verbose {
-		dlog.Output(2, fmt.Sprint(x...))
+		Dlog.Output(2, fmt.Sprint(x...))
 	}
-	exclusiv.Unlock()
 }
 
 // Debugf logging
 func Debugf(format string, x ...interface{}) {
-	exclusiv.Lock()
 	if Verbose {
-		dlog.Output(2, fmt.Sprintf(format, x...))
+		Dlog.Output(2, fmt.Sprintf(format, x...))
 	}
-	exclusiv.Unlock()
 }
 
 // Warning logging
 func Warning(x ...interface{}) {
-	exclusiv.Lock()
-	wlog.Output(2, fmt.Sprint(x...))
-	exclusiv.Unlock()
+	Wlog.Output(2, fmt.Sprint(x...))
 }
 
 // Warningf logging with formatting
 func Warningf(format string, x ...interface{}) {
-	exclusiv.Lock()
-	wlog.Output(2, fmt.Sprintf(format, x...))
-	exclusiv.Unlock()
+	Wlog.Output(2, fmt.Sprintf(format, x...))
 }
 
 // Fatal logging, with exit
 func Fatal(x ...interface{}) {
-	exclusiv.Lock()
-	clog.Output(2, fmt.Sprint(x...))
-	exclusiv.Unlock()
+	Flog.Output(2, fmt.Sprint(x...))
 	os.Exit(1)
 }
 
 // Fatalf logging, with exit
 func Fatalf(format string, x ...interface{}) {
-	exclusiv.Lock()
-	clog.Output(2, fmt.Sprintf(format, x...))
-	exclusiv.Unlock()
+	Flog.Output(2, fmt.Sprintf(format, x...))
 	os.Exit(1)
 }
 
 // Println supports original "log" package style
 func Println(x ...interface{}) {
-	exclusiv.Lock()
-	ilog.Output(2, fmt.Sprintln(x...))
-	exclusiv.Unlock()
+	Ilog.Output(2, fmt.Sprintln(x...))
 }
 
 // Printf supports original "log" package style
 func Printf(format string, x ...interface{}) {
-	exclusiv.Lock()
-	ilog.Output(2, fmt.Sprintf(format, x...))
-	exclusiv.Unlock()
+	Ilog.Output(2, fmt.Sprintf(format, x...))
 }
 
 // PrintfLevel makes it possible to print while refering to
 // code up level above the actual code.
 func PrintfLevel(up int, format string, x ...interface{}) {
-	exclusiv.Lock()
-	ilog.Output(2+up, fmt.Sprintf(format, x...))
-	exclusiv.Unlock()
+	Ilog.Output(2+up, fmt.Sprintf(format, x...))
 }

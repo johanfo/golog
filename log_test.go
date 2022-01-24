@@ -1,8 +1,11 @@
 package log
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestLogger(t *testing.T) {
+	SetFlags(Lshortfile | Lmsgprefix)
 	Info("Infotest")
 	Debug("Should not be visible")
 	Verbose = true
